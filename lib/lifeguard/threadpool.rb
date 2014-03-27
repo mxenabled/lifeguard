@@ -106,7 +106,7 @@ module Lifeguard
     # Private Instance Methods
     #
     def prune_busy_threads_without_mutex
-      @busy_threads.reject!(&:dead?)
+      @busy_threads.select!(&:alive?)
     end
 
   end
