@@ -21,12 +21,6 @@ module Lifeguard
     ##
     # Public Instance Methods
     #
-    def <<(callable = nil, &block)
-      self.post(callable || block)
-
-      return self
-    end
-
     def busy_size
       @busy_threads.size
     end
@@ -45,7 +39,7 @@ module Lifeguard
       end
     end
 
-    def post(callable = nil, &block)
+    def async(callable = nil, &block)
       queued_the_work = false
       callable = callable || block
 
