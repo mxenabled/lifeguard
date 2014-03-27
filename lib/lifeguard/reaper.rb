@@ -1,11 +1,10 @@
 module Lifeguard
   class Reaper
-
     ##
     # Constructor
     #
-    def initialize(cached_threadpool, reaping_interval)
-      @cached_threadpool = cached_threadpool
+    def initialize(threadpool, reaping_interval)
+      @threadpool = threadpool
       @reaping_interval = reaping_interval
       @thread = ::Thread.new { self.run! }
     end
@@ -18,8 +17,7 @@ module Lifeguard
     end
 
     def reap!
-      @cached_threadpool.prune_busy_workers
-      @cached_threadpool.prune_idle_workers
+      @threadpool.prune_busy_threads
     end
 
     def run!
@@ -27,6 +25,8 @@ module Lifeguard
         sleep(@reaping_interval)
         reap!
       end
+    rescue
+      retry
     end
 
   end

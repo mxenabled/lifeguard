@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ::Lifeguard::CachedThreadpool do
+describe ::Lifeguard::Threadpool do
 
   subject { described_class.new(:max_threads => 5) }
 
