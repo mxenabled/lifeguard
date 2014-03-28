@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe ::Lifeguard::Threadpool do
 
-  subject { described_class.new(:max_threads => 5) }
+  subject { described_class.new(:pool_size => 5) }
 
   after(:each) do
     subject.kill!
@@ -10,16 +10,6 @@ describe ::Lifeguard::Threadpool do
   end
 
   describe '#kill!' do
-    it 'stops accepting new tasks' do
-      subject.async{ sleep(1) }
-      sleep(0.1)
-      subject.kill!
-      @expected = false
-      subject.async{ @expected = true }.should be_false
-      sleep(1)
-      @expected.should be_false
-    end
-
     it 'attempts to kill all in-progress tasks' do
       @expected = false
       subject.async{ sleep(1); @expected = true }
