@@ -39,12 +39,11 @@ module Lifeguard
       end
     end
 
-    def async(callable = nil, &block)
+    def async(*args, &block)
       queued_the_work = false
-      callable = callable || block
 
-      if callable.nil? || !callable.respond_to?(:call)
-        raise "Threadpool work must respond_to :call"
+      unless block
+        raise "Threadpool#async must be passed a block"
       end
 
       @mutex.synchronize do
@@ -53,10 +52,10 @@ module Lifeguard
         if busy_size < pool_size
           queued_the_work = true
 
-          @busy_threads << ::Thread.new(callable, self) do |callable, parent|
+          @busy_threads << ::Thread.new(block, args, self) do |callable, call_args, parent|
             begin
               ::Thread.current.abort_on_exception = false
-              callable.call # should we check the args? pass args?
+              callable.call(*call_args) # should we check the args? pass args?
             ensure
               parent.on_thread_exit(::Thread.current)
             end

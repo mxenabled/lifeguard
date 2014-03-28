@@ -31,7 +31,7 @@ describe ::Lifeguard::Threadpool do
 
     it 'kills all threads' do
       before_thread_count = Thread.list.size
-      100.times { subject.async proc{ sleep(1) } }
+      100.times { subject.async{ sleep(1) } }
       sleep(0.1)
       Thread.list.size.should > before_thread_count
       subject.kill!
@@ -54,40 +54,8 @@ describe ::Lifeguard::Threadpool do
       subject.async(1, 2, 3) do |a, b, c|
         @expected = a + b + c
       end
-      sleep(0.1)
+      sleep(0.5)
       @expected.should eq 6
-    end
-
-    it 'rejects the block while shutting down' do
-      subject.async{ sleep(1) }
-      subject.shutdown
-      @expected = nil
-      subject.async(1, 2, 3) do |a, b, c|
-        @expected = a + b + c
-      end
-      @expected.should be_nil
-    end
-
-    it 'returns false while shutting down' do
-      subject.async{ sleep(1) }
-      subject.shutdown
-      subject.async{ nil }.should be_false
-    end
-
-    it 'rejects the block once shutdown' do
-      subject.shutdown
-      @expected = nil
-      subject.async(1, 2, 3) do |a, b, c|
-        @expected = a + b + c
-      end
-      @expected.should be_nil
-    end
-
-    it 'returns false once shutdown' do
-      subject.async{ nil }
-      subject.shutdown
-      sleep(0.1)
-      subject.async{ nil }.should be_false
     end
   end
 end
