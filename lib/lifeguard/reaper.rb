@@ -24,6 +24,13 @@ module Lifeguard
       loop do
         sleep(@reaping_interval)
         reap!
+        ready_thread_count = @threadpool.pool_size - @threadpool.busy_size
+        
+        if ready_thread_count > 0 && @threadpool.respond_to?(:check_queued_jobs)
+          ready_thread_count.times do
+            @threadpool.check_queued_jobs
+          end
+        end
       end
     rescue
       retry
