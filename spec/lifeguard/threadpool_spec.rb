@@ -9,6 +9,29 @@ describe ::Lifeguard::Threadpool do
     sleep(0.1)
   end
 
+  describe "#timeout!" do
+    it "doesn't timeout when no timeout set" do
+      threadpool = described_class.new()
+      threadpool.timeout?.should be_false
+    end
+
+    it "does timeout when timeout set" do
+      threadpool = described_class.new(:timeout => 30)
+      threadpool.timeout?.should be_true
+    end
+
+    it "uses the reaper to timeout threads that are all wiley" do
+      threadpool = described_class.new(:timeout => 1, :reaping_interval => 1)
+      threadpool.async do
+        sleep(10)
+      end
+
+      threadpool.busy_size.should eq(1)
+      sleep(4)
+      threadpool.busy_size.should eq(0)
+    end
+  end
+
   describe '#kill!' do
     it 'attempts to kill all in-progress tasks' do
       @expected = false
