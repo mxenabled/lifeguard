@@ -8,18 +8,19 @@ module Lifeguard
       super(opts)
       @queued_jobs = []
       @job_queue_mutex = ::Mutex.new
+      @shutdown = false
     end
 
     def async(*args, &block)
+      return false if @shutdown
+
       job_started = super
 
       unless job_started
         @queued_jobs << { :args => args, :block => block }
       end
-    end
 
-    def on_thread_exit(thread)
-      super
+      job_started
     end
 
     def check_queued_jobs
@@ -27,6 +28,22 @@ module Lifeguard
         queued_job = @queued_jobs.pop
         async(queued_job[:args], &queued_job[:block])
       end
+    end
+
+    def kill!(*args)
+      super
+      @shutdown = true
+    end
+
+    def on_thread_exit(thread)
+      return_value = super
+      check_queued_jobs
+      return_value
+    end
+
+    def shutdown(*args)
+      @shutdown = true
+      super
     end
 
   end
