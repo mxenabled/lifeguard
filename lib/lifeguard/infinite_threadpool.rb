@@ -26,7 +26,7 @@ module Lifeguard
     def check_queued_jobs
       if @queued_jobs.size > 0
         queued_job = @queued_jobs.pop
-        async(queued_job[:args], &queued_job[:block])
+        async(*queued_job[:args], &queued_job[:block])
       end
     end
 
