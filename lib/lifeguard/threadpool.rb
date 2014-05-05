@@ -1,5 +1,4 @@
 require 'thread'
-require 'pry'
 
 module Lifeguard
   class Threadpool
