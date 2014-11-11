@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/moneydesktop/lifeguard.svg?branch=master)](https://travis-ci.org/moneydesktop/lifeguard)
 
+[![Code Climate](https://codeclimate.com/github/moneydesktop/lifeguard/badges/gpa.svg)](https://codeclimate.com/github/moneydesktop/lifeguard)
+
 lifeguard
 =========
 
