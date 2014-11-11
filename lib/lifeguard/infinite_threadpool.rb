@@ -6,8 +6,7 @@ module Lifeguard
 
     def initialize(opts = {})
       super(opts)
-      @queued_jobs = []
-      @job_queue_mutex = ::Mutex.new
+      @queued_jobs = ::Queue.new
       @shutdown = false
     end
 
