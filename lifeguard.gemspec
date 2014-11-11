@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["brianastien@gmail.com", "brandonsdewitt@gmail.com"]
   spec.summary       = %q{A Supervised threadpool implementation in ruby.}
   spec.description   = %q{Do you have a threadpool? Do you need someone to watch it? Look no further!}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/moneydesktop/lifeguard"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
