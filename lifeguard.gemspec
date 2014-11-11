@@ -6,8 +6,8 @@ require 'lifeguard/version'
 Gem::Specification.new do |spec|
   spec.name          = "lifeguard"
   spec.version       = Lifeguard::VERSION
-  spec.authors       = ["Brian Stien"]
-  spec.email         = ["brian.stien@moneydesktop.com"]
+  spec.authors       = ["Brian Stien","Brandon Dewitt"]
+  spec.email         = ["brianastien@gmail.com", "brandonsdewitt@gmail.com"]
   spec.summary       = %q{A Supervised threadpool implementation in ruby.}
   spec.description   = %q{Do you have a threadpool? Do you need someone to watch it? Look no further!}
   spec.homepage      = ""
@@ -25,5 +25,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "rspec-pride"
   spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "special_delivery"
 end
