@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/moneydesktop/lifeguard.svg?branch=master)](https://travis-ci.org/moneydesktop/lifeguard)
+
 lifeguard
 =========
 
