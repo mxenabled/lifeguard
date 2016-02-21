@@ -1,17 +1,19 @@
 require 'thread'
+require 'securerandom'
 
 module Lifeguard
   class Threadpool
     DEFAULT_REAPING_INTERVAL = 5 # in seconds
     DEFAULT_POOL_SIZE = 2
 
-    attr_accessor :options, :pool_size
+    attr_accessor :name, :options, :pool_size
 
     ##
     # Constructor
     #
     def initialize(opts = {})
       @options = opts
+      @name = opts[:name] || ::SecureRandom.uuid
       @pool_size = opts[:pool_size] || DEFAULT_POOL_SIZE
 
       # Important info about "timeout", it is controlled by the reaper

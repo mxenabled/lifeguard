@@ -25,6 +25,15 @@ describe ::Lifeguard::Threadpool do
     end
   end
 
+  describe "#name" do
+    let(:name) { "AWESOME_NAME" }
+
+    it "allows a name to be set via an option" do
+      threadpool = described_class.new(:name => name, :pool_size => 1, :reaping_interval => 1)
+      expect(threadpool.name).to eq(name)
+    end
+  end
+
   describe "#timeout!" do
     it "doesn't timeout when no timeout set" do
       threadpool = described_class.new()
