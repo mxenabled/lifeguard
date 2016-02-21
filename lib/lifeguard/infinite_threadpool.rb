@@ -13,6 +13,7 @@ module Lifeguard
     def async(*args, &block)
       return false if @shutdown
 
+      check_queued_jobs
       job_started = super
 
       unless job_started
@@ -23,10 +24,12 @@ module Lifeguard
     end
 
     def check_queued_jobs
-      if @queued_jobs.size > 0
-        queued_job = @queued_jobs.pop
-        async(*queued_job[:args], &queued_job[:block])
-      end
+      return if busy?
+      return if @queued_jobs.size <= 0
+
+      queued_job = @queued_jobs.pop
+      async(*queued_job[:args], &queued_job[:block])
+      check_queued_jobs
     end
 
     def kill!(*args)
@@ -38,6 +41,12 @@ module Lifeguard
       return_value = super
       check_queued_jobs
       return_value
+    end
+
+    def prune_busy_threads
+      response = super
+      check_queued_jobs
+      response
     end
 
     def shutdown(*args)
