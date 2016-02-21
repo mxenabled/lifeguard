@@ -7,6 +7,7 @@ module Lifeguard
       @threadpool = threadpool
       @reaping_interval = reaping_interval
       @thread = ::Thread.new { self.run! }
+      ::Thread.pass until alive?
     end
 
     ##

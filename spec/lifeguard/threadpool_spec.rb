@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe ::Lifeguard::Threadpool do
-
   subject { described_class.new(:pool_size => 5) }
 
   after(:each) do
@@ -78,13 +77,14 @@ describe ::Lifeguard::Threadpool do
     end
 
     it 'kills all threads' do
+      subject
       before_thread_count = Thread.list.size
       100.times { subject.async{ sleep(1) } }
       sleep(0.1)
       Thread.list.size.should > before_thread_count
       subject.kill!
       sleep(0.1)
-      Thread.list.size.should eq(before_thread_count + 1) # +1 for the reaper
+      Thread.list.size.should eq(before_thread_count)
     end
   end
 
