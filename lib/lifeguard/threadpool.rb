@@ -5,12 +5,13 @@ module Lifeguard
     DEFAULT_REAPING_INTERVAL = 5 # in seconds
     DEFAULT_POOL_SIZE = 2
 
-    attr_accessor :pool_size
+    attr_accessor :options, :pool_size
 
     ##
     # Constructor
     #
     def initialize(opts = {})
+      @options = opts
       @pool_size = opts[:pool_size] || DEFAULT_POOL_SIZE
 
       # Important info about "timeout", it is controlled by the reaper
@@ -23,12 +24,16 @@ module Lifeguard
       @mutex = ::Mutex.new
       @busy_threads = []
 
-      @reaper = ::Lifeguard::Reaper.new(self, opts[:reaping_interval] || DEFAULT_REAPING_INTERVAL)
+      restart_reaper_unless_alive
     end
 
     ##
     # Public Instance Methods
     #
+    def busy?
+      busy_size >= pool_size
+    end
+
     def busy_size
       @busy_threads.size
     end
@@ -49,6 +54,7 @@ module Lifeguard
 
     def async(*args, &block)
       queued_the_work = false
+      restart_reaper_unless_alive
 
       unless block
         raise "Threadpool#async must be passed a block"
@@ -127,6 +133,12 @@ module Lifeguard
     #
     def prune_busy_threads_without_mutex
       @busy_threads.select!(&:alive?)
+    end
+
+    def restart_reaper_unless_alive
+      return if @reaper && @reaper.alive?
+
+      @reaper = ::Lifeguard::Reaper.new(self, options[:reaping_interval] || DEFAULT_REAPING_INTERVAL)
     end
 
   end
