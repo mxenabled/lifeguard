@@ -8,28 +8,32 @@ module Lifeguard
       super(opts)
       @queued_jobs = ::Queue.new
       @shutdown = false
+      @super_async_mutex = ::Mutex.new
     end
+
+    # Handle to original async method
+    # for check_queued_jobs to use directly
+    alias_method :super_async, :async
 
     def async(*args, &block)
       return false if @shutdown
-
+      @queued_jobs << { :args => args, :block => block }
       check_queued_jobs
-      job_started = super
 
-      unless job_started
-        @queued_jobs << { :args => args, :block => block }
-      end
-
-      job_started
+      return true
     end
 
     def check_queued_jobs
-      return if busy?
-      return if @queued_jobs.size <= 0
+      loop do
+        break if busy?
+        break if @queued_jobs.size <= 0
 
-      queued_job = @queued_jobs.pop
-      async(*queued_job[:args], &queued_job[:block])
-      check_queued_jobs
+        @super_async_mutex.synchronize do
+          break if busy?
+          queued_job = @queued_jobs.pop
+          super_async(*queued_job[:args], &queued_job[:block])
+        end
+      end
     end
 
     def kill!(*args)
