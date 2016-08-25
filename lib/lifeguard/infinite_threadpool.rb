@@ -10,6 +10,10 @@ module Lifeguard
       @shutdown = false
     end
 
+    # Handle to original async method
+    # for check_queued_jobs to use directly
+    alias_method :super_async, :async
+
     def async(*args, &block)
       return false if @shutdown
 
@@ -28,7 +32,7 @@ module Lifeguard
       return if @queued_jobs.size <= 0
 
       queued_job = @queued_jobs.pop
-      async(*queued_job[:args], &queued_job[:block])
+      super_async(*queued_job[:args], &queued_job[:block])
       check_queued_jobs
     end
 
