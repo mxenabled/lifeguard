@@ -29,16 +29,16 @@ module Lifeguard
     end
 
     def check_queued_jobs
-      return if busy?
-      return if @queued_jobs.size <= 0
+      loop do
+        break if busy?
+        break if @queued_jobs.size <= 0
 
-      @super_async_mutex.synchronize do
-        return if busy?
-        queued_job = @queued_jobs.pop
-        super_async(*queued_job[:args], &queued_job[:block])
+        @super_async_mutex.synchronize do
+          break if busy?
+          queued_job = @queued_jobs.pop
+          super_async(*queued_job[:args], &queued_job[:block])
+        end
       end
-
-      check_queued_jobs
     end
 
     def kill!(*args)
