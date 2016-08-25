@@ -8,6 +8,7 @@ module Lifeguard
       super(opts)
       @queued_jobs = ::Queue.new
       @shutdown = false
+      @super_async_mutex = ::Mutex.new
     end
 
     # Handle to original async method
@@ -31,8 +32,12 @@ module Lifeguard
       return if busy?
       return if @queued_jobs.size <= 0
 
-      queued_job = @queued_jobs.pop
-      super_async(*queued_job[:args], &queued_job[:block])
+      @super_async_mutex.synchronize do
+        return if busy?
+        queued_job = @queued_jobs.pop
+        super_async(*queued_job[:args], &queued_job[:block])
+      end
+
       check_queued_jobs
     end
 
