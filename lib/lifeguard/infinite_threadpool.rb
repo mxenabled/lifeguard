@@ -17,15 +17,10 @@ module Lifeguard
 
     def async(*args, &block)
       return false if @shutdown
-
+      @queued_jobs << { :args => args, :block => block }
       check_queued_jobs
-      job_started = @super_async_mutex.synchronize { super }
 
-      unless job_started
-        @queued_jobs << { :args => args, :block => block }
-      end
-
-      job_started
+      return true
     end
 
     def check_queued_jobs
