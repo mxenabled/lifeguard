@@ -19,7 +19,7 @@ module Lifeguard
       return false if @shutdown
 
       check_queued_jobs
-      job_started = super
+      job_started = @super_async_mutex.synchronize { super }
 
       unless job_started
         @queued_jobs << { :args => args, :block => block }
