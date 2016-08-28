@@ -16,7 +16,7 @@ module Lifeguard
       if busy?
         block.call(*args) rescue nil
       else
-        super(args, &block)
+        super(*args, &block)
       end
 
       return true
