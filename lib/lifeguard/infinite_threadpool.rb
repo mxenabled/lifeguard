@@ -18,9 +18,16 @@ module Lifeguard
 
     def async(*args, &block)
       return false if @shutdown
+      sleep 0.5 if @queued_jobs.size > 1000
       @queued_jobs << { :args => args, :block => block }
 
       return true
+    end
+
+    def shutdown(shutdown_timeout = 30)
+      @shutdown = true
+      @scheduler.join
+      super(shutdown_timeout)
     end
 
     def create_scheduler
