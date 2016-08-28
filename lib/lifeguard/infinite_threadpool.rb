@@ -9,6 +9,7 @@ module Lifeguard
       @queued_jobs = ::Queue.new
       @shutdown = false
       @super_async_mutex = ::Mutex.new
+      @scheduler = create_scheduler
     end
 
     # Handle to original async method
@@ -18,20 +19,19 @@ module Lifeguard
     def async(*args, &block)
       return false if @shutdown
       @queued_jobs << { :args => args, :block => block }
-      check_queued_jobs
 
       return true
     end
 
-    def check_queued_jobs
-      loop do
-        break if busy?
-        break if @queued_jobs.size <= 0
-
-        @super_async_mutex.synchronize do
-          break if busy?
-          queued_job = @queued_jobs.pop
-          super_async(*queued_job[:args], &queued_job[:block])
+    def create_scheduler
+      Thread.new do
+        while !@shutdown || @queud_jobs.size > 0
+          if busy?
+            sleep 0.1
+          else
+            queued_job = @queued_jobs.pop
+            super_async(*queued_job[:args], &queued_job[:block])
+          end
         end
       end
     end
