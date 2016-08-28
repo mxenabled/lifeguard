@@ -6,10 +6,8 @@ module Lifeguard
 
     def initialize(opts = {})
       super(opts)
-      @queued_jobs = ::Queue.new
       @shutdown = false
       @super_async_mutex = ::Mutex.new
-      @scheduler = create_scheduler
     end
 
     def async(*args, &block)
