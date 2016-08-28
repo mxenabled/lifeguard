@@ -12,38 +12,16 @@ module Lifeguard
       @scheduler = create_scheduler
     end
 
-    # Handle to original async method # for check_queued_jobs to use directly
-    alias_method :super_async, :async
-
     def async(*args, &block)
       return false if @shutdown
 
-      if @queued_jobs.size > 1000
+      if busy?
         block.call(*args) rescue nil
       else
-        @queued_jobs << { :args => args, :block => block }
+        super(args, &block)
       end
 
       return true
-    end
-
-    def shutdown(shutdown_timeout = 30)
-      @shutdown = true
-      @scheduler.join
-      super(shutdown_timeout)
-    end
-
-    def create_scheduler
-      Thread.new do
-        while !@shutdown || @queud_jobs.size > 0
-          if busy?
-            sleep 0.1
-          else
-            queued_job = @queued_jobs.pop
-            super_async(*queued_job[:args], &queued_job[:block])
-          end
-        end
-      end
     end
 
     def kill!(*args)
