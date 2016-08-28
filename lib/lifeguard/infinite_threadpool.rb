@@ -12,14 +12,17 @@ module Lifeguard
       @scheduler = create_scheduler
     end
 
-    # Handle to original async method
-    # for check_queued_jobs to use directly
+    # Handle to original async method # for check_queued_jobs to use directly
     alias_method :super_async, :async
 
     def async(*args, &block)
       return false if @shutdown
-      sleep 0.5 if @queued_jobs.size > 1000
-      @queued_jobs << { :args => args, :block => block }
+
+      if @queued_jobs.size > 1000
+        block.call(*args) rescue nil
+      else
+        @queued_jobs << { :args => args, :block => block }
+      end
 
       return true
     end
