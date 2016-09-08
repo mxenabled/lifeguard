@@ -16,12 +16,14 @@ module Lifeguard
       if busy?
         # Account for "weird" exceptions like Java Exceptions or higher up the chain
         # than what `rescue nil` will capture
-        ::Thread.new(block, args) do |callable, call_args|
+        new_thread = ::Thread.new(block, args) do |callable, call_args|
           ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
           ::Thread.current.abort_on_exception = false
 
           callable.call(*call_args)
-        end.join
+        end
+
+        ::Thread.pass while new_thread.alive?
       else
         super(*args, &block)
       end
