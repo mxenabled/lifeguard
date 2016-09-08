@@ -14,7 +14,14 @@ module Lifeguard
       return false if @shutdown
 
       if busy?
-        block.call(*args) rescue nil
+        # Account for "weird" exceptions like Java Exceptions or higher up the chain
+        # than what `rescue nil` will capture
+        ::Thread.new(block, args) do |callable, call_args|
+          ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
+          ::Thread.current.abort_on_exception = false
+
+          callable.call(*call_args)
+        end.join
       else
         super(*args, &block)
       end
@@ -25,18 +32,6 @@ module Lifeguard
     def kill!(*args)
       super
       @shutdown = true
-    end
-
-    def on_thread_exit(thread)
-      return_value = super
-      check_queued_jobs
-      return_value
-    end
-
-    def prune_busy_threads
-      response = super
-      check_queued_jobs
-      response
     end
 
     def shutdown(*args)
