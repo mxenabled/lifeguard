@@ -45,14 +45,17 @@ describe ::Lifeguard::Threadpool do
     end
 
     it "uses the reaper to timeout threads that are all wiley" do
+      expected = false
       threadpool = described_class.new(:timeout => 1, :reaping_interval => 1)
       threadpool.async do
-        sleep(10)
+        sleep(3)
+        expected = true
       end
 
       threadpool.busy_size.should eq(1)
       sleep(4)
       threadpool.busy_size.should eq(0)
+      expected.should be(false)
     end
   end
 
@@ -78,13 +81,12 @@ describe ::Lifeguard::Threadpool do
 
     it 'kills all threads' do
       subject
-      before_thread_count = Thread.list.size
       100.times { subject.async{ sleep(1) } }
       sleep(0.1)
-      Thread.list.size.should > before_thread_count
+      subject.busy_size.should eq(subject.pool_size)
       subject.kill!
       sleep(0.1)
-      Thread.list.size.should eq(before_thread_count)
+      subject.busy_size.should eq(0)
     end
   end
 
