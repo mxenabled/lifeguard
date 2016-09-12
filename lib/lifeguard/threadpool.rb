@@ -24,7 +24,7 @@ module Lifeguard
       #
       @timeout = opts[:timeout]
       @mutex = ::Mutex.new
-      @busy_threads = []
+      @busy_threads = ThreadGroup.new
 
       restart_reaper_unless_alive
     end
@@ -37,20 +37,12 @@ module Lifeguard
     end
 
     def busy_size
-      @busy_threads.size
+      @busy_threads.list.size
     end
 
     def kill!
       @mutex.synchronize do
-        prune_busy_threads_without_mutex
-        @busy_threads.each { |busy_thread| busy_thread.kill }
-        prune_busy_threads_without_mutex
-      end
-    end
-
-    def on_thread_exit(thread)
-      @mutex.synchronize do
-        @busy_threads.delete(thread)
+        @busy_threads.list.each { |busy_thread| busy_thread.kill }
       end
     end
 
@@ -63,50 +55,26 @@ module Lifeguard
       end
 
       @mutex.synchronize do
-        prune_busy_threads_without_mutex
-
         if busy_size < pool_size
           queued_the_work = true
 
-          @busy_threads << ::Thread.new(block, args, self) do |callable, call_args, parent|
-            begin
-              ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
-              ::Thread.current.abort_on_exception = false
-              callable.call(*call_args) # should we check the args? pass args?
-            ensure
-              parent.on_thread_exit(::Thread.current)
-            end
-          end
+          @busy_threads.add ::Thread.new(block, args, self) { |callable, call_args, parent|
+            ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
+            ::Thread.current.abort_on_exception = false
+            callable.call(*call_args) # should we check the args? pass args?
+          }
         end
 
-        prune_busy_threads_without_mutex
         queued_the_work
       end
     end
 
-    def prune_busy_threads
+    def shutdown(shutdown_timeout = 3)
+      kill_at = Time.now.to_f + shutdown_timeout
+
       @mutex.synchronize do
-        prune_busy_threads_without_mutex
-      end
-    end
-
-    def shutdown(shutdown_timeout = 0)
-      @mutex.synchronize do
-        prune_busy_threads_without_mutex
-
-        if @busy_threads.size > 0
-          # Cut the shutdown_timeout by 10 and prune while things finish before the kill
-          (shutdown_timeout/10).times do 
-            sleep (shutdown_timeout / 10.0)
-            prune_busy_threads_without_mutex
-            break if busy_size == 0
-          end
-
-          sleep(shutdown_timeout/10)
-          @busy_threads.each { |busy_thread| busy_thread.kill }
-        end
-
-        prune_busy_threads_without_mutex
+        sleep 0.01 while busy_size > 0 && Time.now.to_f < kill_at
+        @busy_threads.list.each { |busy_thread| busy_thread.kill }
       end
     end
 
@@ -114,13 +82,11 @@ module Lifeguard
       return unless timeout?
 
       @mutex.synchronize do
-        @busy_threads.each do |busy_thread|
+        @busy_threads.list.each do |busy_thread|
           if (Time.now.to_i - busy_thread[:__start_time_in_seconds__] > @timeout)
             busy_thread.kill
           end
         end
-
-        prune_busy_threads_without_mutex
       end
     end
 
@@ -133,10 +99,6 @@ module Lifeguard
     ##
     # Private Instance Methods
     #
-    def prune_busy_threads_without_mutex
-      @busy_threads.select!(&:alive?)
-    end
-
     def restart_reaper_unless_alive
       return if @reaper && @reaper.alive?
 

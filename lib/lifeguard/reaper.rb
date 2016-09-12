@@ -20,7 +20,6 @@ module Lifeguard
     def run!
       loop do
         sleep(@reaping_interval)
-        @threadpool.prune_busy_threads if @threadpool
         @threadpool.timeout! if @threadpool
       end
     rescue
