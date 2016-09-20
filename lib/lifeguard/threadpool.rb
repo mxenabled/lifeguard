@@ -59,8 +59,8 @@ module Lifeguard
           queued_the_work = true
 
           @busy_threads.add ::Thread.new(block, args, self) { |callable, call_args, parent|
-            ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
             ::Thread.current.abort_on_exception = false
+            ::Thread.current[:__start_time_in_seconds__] = Time.now.to_i
             callable.call(*call_args) # should we check the args? pass args?
           }
         end
